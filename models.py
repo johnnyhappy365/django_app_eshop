@@ -8,7 +8,11 @@ class Good(models.Model):
     good_price = models.FloatField()
     # related_name是反向引用，如user.goods
     user = models.ForeignKey(
-        'auth.User', on_delete=models.CASCADE, related_name='goods')
+        "auth.User", on_delete=models.CASCADE, related_name="goods"
+    )
+
+    def __str__(self):
+        return f"{self.good_name}:{self.good_price}"
 
     class Meta:
-        ordering = ['-good_price']
+        ordering = ["-good_price"]

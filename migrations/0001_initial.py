@@ -7,17 +7,26 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Good',
+            name="Good",
             fields=[
-                ('id', models.AutoField(auto_created=True,
-                                        primary_key=True, serialize=False, verbose_name='ID')),
-                ('good_name', models.CharField(max_length=128, verbose_name='商品名称')),
-                ('good_price', models.FloatField(verbose_name='商品价格')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "good_name",
+                    models.CharField(max_length=128, verbose_name="商品名称"),
+                ),
+                ("good_price", models.FloatField(verbose_name="商品价格")),
             ],
         ),
     ]

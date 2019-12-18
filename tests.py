@@ -12,11 +12,10 @@ User = get_user_model()
 
 
 class GoodTestCase(TestCase):
-
     def setUp(self):
         self.client = APIClient()
-        username = 'admin'
-        password = '123'
+        username = "admin"
+        password = "123"
         self.admin = User.objects.create(username=username)
         self.admin.set_password(password)
         self.admin.save()
@@ -24,23 +23,30 @@ class GoodTestCase(TestCase):
         self.credentials(username, password)
 
     def credentials(self, username, password):
-        response = self._post(reverse('auth'), {
-            'username': username,
-            'password': password
-        })
+        response = self._post(
+            reverse("auth"), {"username": username, "password": password}
+        )
         self._should_200(response)
-        token = json.loads(response.content).get('token')
-        self.assertNotEqual(token, None, 'should get token')
-        self.client.credentials(HTTP_AUTHORIZATION='Token ' + token)
+        token = json.loads(response.content).get("token")
+        self.assertNotEqual(token, None, "should get token")
+        self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
 
     def _get(self, path):
         return self.client.get(path)
 
     def _post(self, path, data):
-        return self.client.post(path, data=urlencode(data), content_type='application/x-www-form-urlencoded')
+        return self.client.post(
+            path,
+            data=urlencode(data),
+            content_type="application/x-www-form-urlencoded",
+        )
 
     def _put(self, path, data):
-        return self.client.put(path, data=urlencode(data), content_type='application/x-www-form-urlencoded')
+        return self.client.put(
+            path,
+            data=urlencode(data),
+            content_type="application/x-www-form-urlencoded",
+        )
 
     def _delete(self, path):
         return self.client.delete(path)
@@ -53,41 +59,39 @@ class GoodTestCase(TestCase):
 
     def test_query_good(self):
 
-        response = self._get(reverse('good_list'))
+        response = self._get(reverse("good-list"))
         self._should_200(response)
         data = json.loads(response.content)
-        self.assertEqual(len(data), 0)
+        self.assertEqual(len(data["results"]), 0)
 
     def test_good_list(self):
         # add two goods for test
-        Good.objects.create(good_name='a', good_price=1, user=self.admin)
-        Good.objects.create(good_name='b', good_price=2, user=self.admin)
+        Good.objects.create(good_name="a", good_price=1, user=self.admin)
+        Good.objects.create(good_name="b", good_price=2, user=self.admin)
 
-        response = self._get(reverse('good_list'))
+        response = self._get(reverse("good-list"))
         self._should_200(response)
 
     def test_good_detail(self):
         # add test instance
-        good = Good.objects.create(good_name='a', good_price=1, user=self.admin)
+        good = Good.objects.create(good_name="a", good_price=1, user=self.admin)
 
         # test get
-        response = self._get(
-            reverse('good_detail', kwargs={'pk': good.id}))
+        response = self._get(reverse("good-detail", kwargs={"pk": good.id}))
 
         self._should_200(response)
         data = json.loads(response.content)
-        self.assertEqual(data['id'], good.id)
+        self.assertEqual(data["id"], good.id)
 
-        response2 = self._put(reverse('good_detail', kwargs={'pk': good.id}), data={
-            'good_name': 'b',
-            'good_price': '2'
-        })
+        response2 = self._put(
+            reverse("good-detail", kwargs={"pk": good.id}),
+            data={"good_name": "b", "good_price": "2"},
+        )
 
         self._should_200(response2)
         data = json.loads(response2.content)
-        self.assertEqual(data['good_name'], 'b')
+        self.assertEqual(data["good_name"], "b")
 
         # test delete
-        response3 = self._delete(
-            reverse('good_detail', kwargs={'pk': good.id}))
+        response3 = self._delete(reverse("good-detail", kwargs={"pk": good.id}))
         self._should_delete(response3)

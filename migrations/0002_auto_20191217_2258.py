@@ -6,18 +6,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('eshop', '0001_initial'),
+        ("eshop", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='good',
-            name='good_name',
+            model_name="good",
+            name="good_name",
             field=models.CharField(max_length=128),
         ),
         migrations.AlterField(
-            model_name='good',
-            name='good_price',
-            field=models.FloatField(),
+            model_name="good", name="good_price", field=models.FloatField(),
         ),
     ]
