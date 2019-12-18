@@ -22,6 +22,15 @@ class GoodTestCase(TestCase):
     data = json.loads(response.content)
     self.assertEqual(len(data), 0)
 
+  def test_good_list(self):
+    # add two goods for test
+    Good.objects.create(good_name='a', good_price=1)
+    Good.objects.create(good_name='b', good_price=2)
+
+    response = client.get(reverse('good_list'))
+    self._should_200(response)
+
+
   def test_good_detail(self):
     # add test instance
     good = Good.objects.create(good_name='a', good_price=1)
