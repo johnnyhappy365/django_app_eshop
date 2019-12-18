@@ -15,6 +15,8 @@ class GoodViewSet(viewsets.ModelViewSet):
         permissions.IsAuthenticatedOrReadOnly,
         IsOwnerOrReadOnly,
     )
+    filter_fields = ("good_name", "good_price")
+    ordering_fields = ("good_name", "good_price")
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.User)

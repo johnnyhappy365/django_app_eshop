@@ -31,8 +31,8 @@ class GoodTestCase(TestCase):
         self.assertNotEqual(token, None, "should get token")
         self.client.credentials(HTTP_AUTHORIZATION="Token " + token)
 
-    def _get(self, path):
-        return self.client.get(path)
+    def _get(self, path, params={}):
+        return self.client.get(path, params)
 
     def _post(self, path, data):
         return self.client.post(
@@ -71,6 +71,55 @@ class GoodTestCase(TestCase):
 
         response = self._get(reverse("good-list"))
         self._should_200(response)
+
+    def test_good_list_filter(self):
+        # add two goods for test
+        Good.objects.create(good_name="a", good_price=1, user=self.admin)
+        Good.objects.create(good_name="b", good_price=2, user=self.admin)
+        Good.objects.create(good_name="a", good_price=3, user=self.admin)
+
+        # test filter by field
+        response = self._get(reverse("good-list"), {"good_name": "a"})
+        self._should_200(response)
+        data = json.loads(response.content)["results"]
+        self.assertEqual(data[0]["good_name"], "a")
+        self.assertEqual(
+            len(data), 2, "should only return 2 by filter good_name = a"
+        )
+
+        # test filter by price
+        response = self._get(reverse("good-list"), {"good_price": 2})
+        self._should_200(response)
+        data = json.loads(response.content)["results"]
+        self.assertEqual(data[0]["good_price"], 2)
+        self.assertEqual(
+            len(data), 1, "should only return 1 by filter good_price = 2"
+        )
+
+        # test ordering by id
+        response = self._get(reverse("good-list"), {"ordering": "good_price"})
+        self._should_200(response)
+        data = json.loads(response.content)["results"]
+        self.assertEqual(data[0]["good_price"], 1)
+
+        # ordering reverse
+        response = self._get(reverse("good-list"), {"ordering": "-good_price"})
+        self._should_200(response)
+        data = json.loads(response.content)["results"]
+        self.assertEqual(data[0]["good_price"], 3)
+
+        # field and ordering
+        response = self._get(
+            reverse("good-list"), {"ordering": "-good_price", "good_name": "a"}
+        )
+        self._should_200(response)
+        data = json.loads(response.content)["results"]
+        self.assertEqual(data[0]["good_price"], 3)
+        self.assertEqual(
+            len(data),
+            2,
+            "should only return 2 by filter good_name = a and ordering = -good_price",
+        )
 
     def test_good_detail(self):
         # add test instance
