@@ -3,7 +3,15 @@ from django.db import models
 # Create your models here.
 
 
-class Good(models.Model):
+class BaseModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+
+class Good(BaseModel):
     good_name = models.CharField(max_length=128)
     good_price = models.FloatField()
     # related_name是反向引用，如user.goods
@@ -20,7 +28,7 @@ class Good(models.Model):
         ordering = ["-good_price"]
 
 
-class GoodCategory(models.Model):
+class GoodCategory(BaseModel):
     name = models.CharField(max_length=32)
     user = models.ForeignKey(
         "auth.User", on_delete=models.CASCADE, related_name="goodCategories"

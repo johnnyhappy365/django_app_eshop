@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 locale = "zh_CN"
+admin_username = "eshop_admin"
 
 
 class AdminFactory(factory.django.DjangoModelFactory):
@@ -11,8 +12,8 @@ class AdminFactory(factory.django.DjangoModelFactory):
         model = User
         django_get_or_create = ("username",)
 
-    username = "eshop_admin"
-    "123admin"
+    username = admin_username
+    # "123admin"
     password = "pbkdf2_sha256$180000$eCG6nj48LdI9$jLI8h+FaxKXhSBozZbIfQzTHtbSxaXWNrqecXWlw8/E="
     is_superuser = True
     email = "zhangwy@vip.163.com"
