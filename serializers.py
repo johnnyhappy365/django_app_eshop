@@ -26,3 +26,9 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Good
         fields = ("id", "username", "goods")
+
+
+class GoodStatSerializer(serializers.Serializer):
+    def to_representation(self, obj):
+        return obj
+
