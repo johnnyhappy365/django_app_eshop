@@ -4,24 +4,6 @@ import random
 from datetime import datetime
 
 
-def init_data(apps, schema_editor):
-    if not settings.TESTING:
-        # call_command("loaddata", "dev_data")
-        admin = AdminFactory()
-        top_category = GoodCategoryFactory()
-        category1 = GoodCategoryFactory.create(parent=top_category, user=admin)
-        category2 = GoodCategoryFactory.create(parent=top_category, user=admin)
-        for i in range(10):
-            GoodFactory.create(user=admin, category=category1)
-            GoodFactory.create(user=admin, category=category2)
-    else:
-        print("do nothing")
-
-
-def drop_init_data(apps, schema_editor):
-    User.objects.filter(username=admin_username).delete()
-
-
 def random_date():
     day = random.randint(1, 30)
     hour = random.randint(1, 23)
