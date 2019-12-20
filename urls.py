@@ -7,7 +7,7 @@ from rest_framework.routers import DefaultRouter
 router = DefaultRouter()
 router.register(r"goods", views.GoodViewSet)
 router.register(
-    r"goodHistStat", views.GoodHistStatViewSet, basename="goodHistStat1"
+    r"goodHistStat", views.GoodHistStatViewSet, basename="goodhiststat"
 )
 router.register(r"goodCategories", views.GoodCategoryViewSet)
 urlpatterns = [

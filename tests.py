@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from urllib.parse import urlencode
 from .models import Good, GoodCategory
 from datetime import datetime
+from dateutil import parser
 import json
 from eshop.factories import *
 from pprint import pprint
@@ -194,3 +195,83 @@ class GoodCategoryTestCase(BaseTest):
         self._should_200(response)
         data = json.loads(response.content)
         self.assertEqual(data["count"], 2)
+
+
+class GoodHistStatTestCase(BaseTest):
+    def setUp(self):
+        super().setUp()
+
+    def _date(self, date: str):
+        return datetime.strptime(date, "%Y-%m-%d")
+
+    def _datetime(self, date: str):
+        return datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+
+    def test_list(self):
+        c1 = GoodCategoryFactory.create(user=self.admin)
+
+        def create_good_with_date(date):
+            g1 = GoodFactory.create(category=c1)
+            g1.created_at = self._date(date)
+            g1.save()
+            return g1
+
+        create_good_with_date("2019-12-1")
+        create_good_with_date("2019-12-1")
+        create_good_with_date("2019-12-2")
+
+        response = self._get(reverse("goodhiststat-list"))
+        self._should_200(response)
+        results = json.loads(response.content)["results"]
+        self.assertEqual(len(results), 2, "should reutrn 2 days stat")
+
+    def test_list_with_date_filter(self):
+        c1 = GoodCategoryFactory.create(user=self.admin)
+
+        def create_good_with_date(date, category):
+            g1 = GoodFactory.create(category=category)
+            g1.created_at = self._date(date)
+            g1.save()
+            return g1
+
+        create_good_with_date("2019-12-1", c1)
+        create_good_with_date("2019-12-2", c1)
+        create_good_with_date("2019-12-3", c1)
+
+        response = self._get(
+            reverse("goodhiststat-list"),
+            {"created_at_after": "2019-12-1", "created_at_before": "2019-12-2"},
+        )
+        self._should_200(response)
+        results = json.loads(response.content)["results"]
+        pprint(results)
+        self.assertEqual(len(results), 2, "should reutrn 2 days stat")
+        date1 = parser.parse(results[0]["date"]).strftime("%m-%d")
+        self.assertEqual(date1, "12-01")
+
+    def test_list_with_datetime_filter(self):
+        c1 = GoodCategoryFactory.create(user=self.admin)
+
+        def create_good_with_datetime(date, category):
+            g1 = GoodFactory.create(category=category)
+            g1.created_at = self._datetime(date)
+            g1.save()
+            return g1
+
+        create_good_with_datetime("2019-12-1 1:00:00", c1)
+        create_good_with_datetime("2019-12-1 2:00:00", c1)
+        create_good_with_datetime("2019-12-1 3:00:00", c1)
+
+        response = self._get(
+            reverse("goodhiststat-list"),
+            {
+                "created_at_after": "2019-12-1 1:00:00",
+                "created_at_before": "2019-12-1 2:00:00",
+            },
+        )
+        self._should_200(response)
+        results = json.loads(response.content)["results"]
+        self.assertEqual(len(results), 1, "should reutrn 1 days stat")
+        date1 = parser.parse(results[0]["date"]).strftime("%m-%d")
+        self.assertEqual(date1, "12-01")
+

@@ -25,7 +25,7 @@ class GoodViewSet(viewsets.ModelViewSet):
 
 
 class GoodHistStatFilter(django_filters.rest_framework.FilterSet):
-    created_at = django_filters.DateFromToRangeFilter()
+    created_at = django_filters.DateTimeFromToRangeFilter()
 
     class Meta:
         model = Good
@@ -42,7 +42,7 @@ class GoodHistStatViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
             .annotate(date=TruncDay("created_at"))
             .values("date")
             .annotate(created_count=Count("id"))
-            .order_by("-date")
+            .order_by("date")
         )
 
 
