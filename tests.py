@@ -197,28 +197,38 @@ class GoodCategoryTestCase(BaseTest):
         self.assertEqual(data["count"], 2)
 
 
+def _date(date: str):
+    return datetime.strptime(date, "%Y-%m-%d")
+
+
+def _datetime(date: str):
+    return datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
+
+
+def create_good_with_date(date, category):
+    g1 = GoodFactory.create(category=category)
+    g1.created_at = _date(date)
+    g1.save()
+    return g1
+
+
+def create_good_with_datetime(date, category):
+    g1 = GoodFactory.create(category=category)
+    g1.created_at = _datetime(date)
+    g1.save()
+    return g1
+
+
 class GoodHistStatTestCase(BaseTest):
     def setUp(self):
         super().setUp()
 
-    def _date(self, date: str):
-        return datetime.strptime(date, "%Y-%m-%d")
-
-    def _datetime(self, date: str):
-        return datetime.strptime(date, "%Y-%m-%d %H:%M:%S")
-
     def test_list(self):
         c1 = GoodCategoryFactory.create(user=self.admin)
 
-        def create_good_with_date(date):
-            g1 = GoodFactory.create(category=c1)
-            g1.created_at = self._date(date)
-            g1.save()
-            return g1
-
-        create_good_with_date("2019-12-1")
-        create_good_with_date("2019-12-1")
-        create_good_with_date("2019-12-2")
+        create_good_with_date("2019-12-1", c1)
+        create_good_with_date("2019-12-1", c1)
+        create_good_with_date("2019-12-2", c1)
 
         response = self._get(reverse("goodhiststat-list"))
         self._should_200(response)
@@ -227,12 +237,6 @@ class GoodHistStatTestCase(BaseTest):
 
     def test_list_with_date_filter(self):
         c1 = GoodCategoryFactory.create(user=self.admin)
-
-        def create_good_with_date(date, category):
-            g1 = GoodFactory.create(category=category)
-            g1.created_at = self._date(date)
-            g1.save()
-            return g1
 
         create_good_with_date("2019-12-1", c1)
         create_good_with_date("2019-12-2", c1)
@@ -252,12 +256,6 @@ class GoodHistStatTestCase(BaseTest):
     def test_list_with_datetime_filter(self):
         c1 = GoodCategoryFactory.create(user=self.admin)
 
-        def create_good_with_datetime(date, category):
-            g1 = GoodFactory.create(category=category)
-            g1.created_at = self._datetime(date)
-            g1.save()
-            return g1
-
         create_good_with_datetime("2019-12-1 1:00:00", c1)
         create_good_with_datetime("2019-12-1 2:00:00", c1)
         create_good_with_datetime("2019-12-1 3:00:00", c1)
@@ -274,4 +272,34 @@ class GoodHistStatTestCase(BaseTest):
         self.assertEqual(len(results), 1, "should reutrn 1 days stat")
         date1 = parser.parse(results[0]["date"]).strftime("%m-%d")
         self.assertEqual(date1, "12-01")
+
+    def test_list_with_freq(self):
+        c1 = GoodCategoryFactory.create(user=self.admin)
+
+        create_good_with_datetime("2018-12-1 0:00:00", c1)
+        create_good_with_datetime("2019-11-1 0:00:00", c1)
+        create_good_with_datetime("2019-11-1 0:00:00", c1)
+        create_good_with_datetime("2019-12-1 1:00:00", c1)
+        create_good_with_datetime("2019-12-1 2:00:00", c1)
+        create_good_with_datetime("2019-12-9 0:00:00", c1)
+
+        def _should_len(response, num):
+            results = json.loads(response.content)["results"]
+            if len(results) != num:
+                print("wrong info", results, num)
+            self.assertEqual(len(results), num, f"should return {num} items")
+
+        test_datas = [
+            {"freq": "hour", "expect_len": 5},
+            {"freq": "day", "expect_len": 4},
+            {"freq": "week", "expect_len": 4},
+            {"freq": "month", "expect_len": 3},
+            {"freq": "year", "expect_len": 2},
+        ]
+        for test_data in test_datas:
+            response = self._get(
+                reverse("goodhiststat-list"), {"freq": test_data["freq"]}
+            )
+            self._should_200(response)
+            _should_len(response, test_data["expect_len"])
 

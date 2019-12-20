@@ -5,7 +5,13 @@ from .serializers import *
 from .permissions import IsOwnerOrReadOnly
 from rest_framework import viewsets, mixins, generics
 from django.db.models import Count
-from django.db.models.functions import TruncDay
+from django.db.models.functions import (
+    TruncDay,
+    TruncHour,
+    TruncWeek,
+    TruncMonth,
+    TruncYear,
+)
 import django_filters
 
 
@@ -27,9 +33,16 @@ class GoodViewSet(viewsets.ModelViewSet):
 class GoodHistStatFilter(django_filters.rest_framework.FilterSet):
     created_at = django_filters.DateTimeFromToRangeFilter()
 
+    # 在API页面中看不到freq, 因为不适合加到上面。这个字段的作用是作为query参数，而不是过滤参数。一但变成过滤参数就会在sql中使用到这个参数
     class Meta:
         model = Good
-        fields = ("good_name", "good_price", "category__name", "created_at")
+        fields = (
+            "good_name",
+            "good_price",
+            "category__name",
+            "created_at",
+            # "freq",
+        )
 
 
 class GoodHistStatViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
@@ -37,11 +50,21 @@ class GoodHistStatViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     filter_class = GoodHistStatFilter
 
     def get_queryset(self):
+        # 默认按天粒度统计
+        freq = self.request.query_params.get("freq", "day")
+        # 按不同时间粒度进行聚合
+        trunc_freqs = {
+            "day": TruncDay,
+            "hour": TruncHour,
+            "week": TruncWeek,
+            "month": TruncMonth,
+            "year": TruncYear,
+        }
+        trunc_method = trunc_freqs[freq]
         return (
-            Good.objects.all()
-            .annotate(date=TruncDay("created_at"))
+            Good.objects.annotate(date=trunc_method("created_at"))
             .values("date")
-            .annotate(created_count=Count("id"))
+            .annotate(count=Count("id"))
             .order_by("date")
         )
 
